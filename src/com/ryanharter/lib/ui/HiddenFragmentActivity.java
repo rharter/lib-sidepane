@@ -20,8 +20,8 @@ import android.widget.RelativeLayout;
 public class HiddenFragmentActivity extends FragmentActivity {
 	private static final String TAG = "HiddenFragmentActivity";
 
-	protected static final int ALIGN_LEFT = RelativeLayout.ALIGN_PARENT_LEFT;
-	protected static final int ALIGN_RIGHT = RelativeLayout.ALIGN_PARENT_RIGHT;
+	protected static final int ALIGN_LEFT = 0;
+	protected static final int ALIGN_RIGHT = 1;
 
 	private Fragment hiddenFragment;
 	private int mainLayoutResID;
@@ -99,7 +99,7 @@ public class HiddenFragmentActivity extends FragmentActivity {
 		backgroundLayout = new FrameLayout(this);
 		RelativeLayout.LayoutParams blp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
 				RelativeLayout.LayoutParams.MATCH_PARENT);
-		blp.addRule(alignment);
+		blp.addRule(alignment == ALIGN_LEFT ? RelativeLayout.ALIGN_PARENT_LEFT : RelativeLayout.ALIGN_PARENT_RIGHT);
 		backgroundLayout.setLayoutParams(blp);
 
 		// Add the supplied fragment
@@ -130,7 +130,11 @@ public class HiddenFragmentActivity extends FragmentActivity {
 	@Override
 	public void onBackPressed() {
 		if (open) {
-			toggle();
+			if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+				getSupportFragmentManager().popBackStack();
+			} else {
+				toggle();
+			}
 		} else {
 			super.onBackPressed();
 		}
@@ -152,10 +156,11 @@ public class HiddenFragmentActivity extends FragmentActivity {
 	 * view moves is entirely based on the width of the hidden fragment.
 	 */
 	public void toggle() {
+		int direction = alignment == ALIGN_LEFT ? -1 : 1;
 		if (open) {
 			if (closeAnimation == null) {
 				// initialize the close animation
-				closeAnimation = new SidePaneAnimation(0f, -backgroundLayout.getWidth(), 0f, 0f);
+				closeAnimation = new SidePaneAnimation(0f, direction * backgroundLayout.getWidth(), 0f, 0f);
 				closeAnimation.setInterpolator(new AccelerateDecelerateInterpolator());
 				closeAnimation.setDuration(200);
 				closeAnimation.setAnimationListener(new AnimationListener() {
@@ -167,7 +172,6 @@ public class HiddenFragmentActivity extends FragmentActivity {
 
 					@Override
 					public void onAnimationRepeat(Animation animation) {
-
 					}
 
 					@Override
@@ -182,7 +186,7 @@ public class HiddenFragmentActivity extends FragmentActivity {
 				final HiddenFragmentActivity self = this;
 
 				backgroundLayout.setVisibility(View.VISIBLE);
-				openAnimation = new SidePaneAnimation(0f, backgroundLayout.getWidth(), 0f, 0f);
+				openAnimation = new SidePaneAnimation(0f, -1 * direction * backgroundLayout.getWidth(), 0f, 0f);
 				openAnimation.setInterpolator(new AccelerateDecelerateInterpolator());
 				openAnimation.setDuration(200);
 				openAnimation.setAnimationListener(new AnimationListener() {
